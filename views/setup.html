@@ -1,7 +1,19 @@
 {% include 'templates/header.html' %}
 
-<form action="/setup" method="post">
-    
+<form action="/setup" method="POST">
+    <ul>
+        <li>
+            <label for="steam_username">Steam UserName</label>
+            <input type="text" name="steam_username"{% if current_user.steam_username %} value="{{ current_user.steam_username }}"{% endif %}>
+        </li>
+        <li>
+            <label for="steam_show_spoilers">Show screenshots with spoilers</label>
+            <input type="checkbox" name="steam_show_spoilers" value="True"{% if current_user.steam_show_spoilers %} checked{% endif %}>
+        </li>
+        <li>
+            <input type="submit" value="Save">
+        </li>
+    </ul>
 </form>
 
 {% include 'templates/footer.html' %}

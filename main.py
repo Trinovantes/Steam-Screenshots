@@ -53,10 +53,12 @@ class BaseHandler(webapp2.RequestHandler):
                     user.put()
 
                 self.session["user"] = dict(
-                    name         = user.name,
-                    profile_url  = user.profile_url,
-                    id           = user.id,
-                    access_token = user.access_token
+                    name                = user.name,
+                    profile_url         = user.profile_url,
+                    id                  = user.id,
+                    access_token        = user.access_token,
+                    steam_username      = user.steam_username,
+                    steam_show_spoilers = user.steam_show_spoilers
                 )
                 return self.session.get("user")
 
@@ -95,12 +97,31 @@ class LogoutHandler(BaseHandler):
 
 class SetupHandler(BaseHandler):
     def get(self):
+        if self.current_user is None:
+            self.redirect('/')
+      
         template = jinja_environment.get_template('setup.html')
         self.response.out.write(template.render(dict(
             facebook_app_id = keys.FB_APP_ID,
             current_user    = self.current_user
         )))
-        
+
+    def post(self):
+        user = User.get_by_key_name(self.current_user['id'])
+        user.steam_username      = self.request.get('steam_username')
+        user.steam_show_spoilers = self.request.get('steam_show_spoilers') == 'True'
+        user.put()
+
+        self.session["user"] = dict(
+            name                = user.name,
+            profile_url         = user.profile_url,
+            id                  = user.id,
+            access_token        = user.access_token,
+            steam_username      = user.steam_username,
+            steam_show_spoilers = user.steam_show_spoilers
+        )
+
+        self.redirect('/setup#saved')
 
 
 jinja_environment = jinja2.Environment(
