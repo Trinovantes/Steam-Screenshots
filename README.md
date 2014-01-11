@@ -1,2 +1,0 @@
-Steam-Screenshots
-=================
