@@ -1,0 +1,92 @@
+/**
+ * modified version of One% CSS Grid (http://onepcssgrid.mattimling.com/)
+ */
+
+.grid{
+    margin:0 auto;
+    max-width:@grid-width;
+}
+
+.row{
+    padding:0 10px;
+
+    &:after{
+        content:"";
+        display:table;
+        clear:both;
+    }
+}
+
+.col-1, 
+.col-2, 
+.col-3, 
+.col-4, 
+.col-5, 
+.col-6, 
+.col-7, 
+.col-8, 
+.col-9, 
+.col-10, 
+.col-11, 
+.col-12{
+    float:left;
+    margin:0 3% 0 0;
+
+    &.last,
+    &:last-child{
+        margin-right:0;
+    }
+
+    img{
+        display:block;
+        width:100%; height:auto;
+    }
+}
+
+.col-1  { width:5.5%;  }
+.col-2  { width:14%;   }
+.col-3  { width:22.5%; }
+.col-4  { width:31%;   }
+.col-5  { width:39.5%; }
+.col-6  { width:48%;   }
+.col-7  { width:56.5%; }
+.col-8  { width:65%;   }
+.col-9  { width:73.5%; }
+.col-10 { width:82%;   }
+.col-11 { width:90.5%; }
+.col-12 { width:99%;   }
+
+/**
+ * 3% extra for each to account for the margin-right
+ */
+.push-1  { margin-left:3% + 5.5%;  }
+.push-2  { margin-left:3% + 14%;   }
+.push-3  { margin-left:3% + 22.5%; }
+.push-4  { margin-left:3% + 31%;   }
+.push-5  { margin-left:3% + 39.5%; }
+.push-6  { margin-left:3% + 48%;   }
+.push-7  { margin-left:3% + 56.5%; }
+.push-8  { margin-left:3% + 65%;   }
+.push-9  { margin-left:3% + 73.5%; }
+.push-10 { margin-left:3% + 82%;   }
+.push-11 { margin-left:3% + 90.5%; }
+
+@media (max-width:@mobile-width){
+    .col-1, 
+    .col-2, 
+    .col-3, 
+    .col-4, 
+    .col-5, 
+    .col-6, 
+    .col-7, 
+    .col-8, 
+    .col-9, 
+    .col-10, 
+    .col-11, 
+    .col-12{
+        float:none;
+        margin:0;
+        padding:0 10px;
+        width:auto;
+    }
+}

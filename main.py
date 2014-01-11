@@ -18,12 +18,14 @@ config['webapp2_extras.sessions'] = dict(secret_key='')
 
 
 class User(db.Model):
-    id           = db.StringProperty(required=True)
-    created      = db.DateTimeProperty(auto_now_add=True)
-    updated      = db.DateTimeProperty(auto_now=True)
-    name         = db.StringProperty(required=True)
-    profile_url  = db.StringProperty(required=True)
-    access_token = db.StringProperty(required=True)
+    id                  = db.StringProperty(required=True)
+    created             = db.DateTimeProperty(auto_now_add=True)
+    updated             = db.DateTimeProperty(auto_now=True)
+    name                = db.StringProperty(required=True)
+    profile_url         = db.StringProperty(required=True)
+    access_token        = db.StringProperty(required=True)
+    steam_username      = db.StringProperty(required=False)
+    steam_show_spoilers = db.BooleanProperty(default=False)
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -36,14 +38,14 @@ class BaseHandler(webapp2.RequestHandler):
             if cookie:
                 user = User.get_by_key_name(cookie["uid"])
                 if not user:
-                    graph = facebook.GraphAPI(cookie["access_token"])
+                    graph   = facebook.GraphAPI(cookie["access_token"])
                     profile = graph.get_object("me")
-                    user = User(
-                        key_name=str(profile["id"]),
-                        id=str(profile["id"]),
-                        name=profile["name"],
-                        profile_url=profile["link"],
-                        access_token=cookie["access_token"]
+                    user    = User(
+                        key_name     = str(profile["id"]),
+                        id           = str(profile["id"]),
+                        name         = profile["name"],
+                        profile_url  = profile["link"],
+                        access_token = cookie["access_token"]
                     )
                     user.put()
                 elif user.access_token != cookie["access_token"]:
@@ -51,10 +53,10 @@ class BaseHandler(webapp2.RequestHandler):
                     user.put()
 
                 self.session["user"] = dict(
-                    name         =user.name,
-                    profile_url  =user.profile_url,
-                    id           =user.id,
-                    access_token =user.access_token
+                    name         = user.name,
+                    profile_url  = user.profile_url,
+                    id           = user.id,
+                    access_token = user.access_token
                 )
                 return self.session.get("user")
 
@@ -74,19 +76,14 @@ class BaseHandler(webapp2.RequestHandler):
 
 class HomeHandler(BaseHandler):
     def get(self):
-        template = jinja_environment.get_template('index.html')
-        self.response.out.write(template.render(dict(
-            facebook_app_id = keys.FB_APP_ID,
-            current_user    = self.current_user
-        )))
-
-    def post(self):
-        url       = self.request.get('url')
-        file      = urllib2.urlopen(url)
-        graph     = facebook.GraphAPI(self.current_user['access_token'])
-        response  = graph.put_photo(file, "Test Image")
-        photo_url = ("http://www.facebook.com/photo.php?fbid={0}".format(response['id']))
-        self.redirect(str(photo_url))
+        if self.current_user is not None:
+            self.redirect('/setup')
+        else:
+            template = jinja_environment.get_template('index.html')
+            self.response.out.write(template.render(dict(
+                facebook_app_id = keys.FB_APP_ID,
+                current_user    = self.current_user
+            )))
 
 
 class LogoutHandler(BaseHandler):
@@ -96,9 +93,28 @@ class LogoutHandler(BaseHandler):
         self.redirect('/')
 
 
+class SetupHandler(BaseHandler):
+    def get(self):
+        template = jinja_environment.get_template('setup.html')
+        self.response.out.write(template.render(dict(
+            facebook_app_id = keys.FB_APP_ID,
+            current_user    = self.current_user
+        )))
+        
+
+
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'views')),
     extensions=['jinja2.ext.autoescape'],
-    autoescape=True)
+    autoescape=True
+)
 
-application = webapp2.WSGIApplication([('/', HomeHandler),], debug=True, config=config)
+application = webapp2.WSGIApplication(
+    [
+        ('/',       HomeHandler),
+        ('/logout', LogoutHandler),
+        ('/setup',  SetupHandler)
+    ],
+    debug=True,
+    config=config
+)
