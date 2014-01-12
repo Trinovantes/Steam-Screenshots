@@ -34,8 +34,7 @@ class SteamScraper():
         current_time = datetime.datetime.now()
         last_scraped = self.user.last_scraped
 
-        if (True):
-        #if ((current_time - last_scraped).days > 1):
+        if ((current_time - last_scraped).days > 1):
             url              = "http://steamcommunity.com/id/" + self.user.steam_username + "/screenshots/"
             request          = urllib2.Request(url, '', {'User-Agent': self.USER_AGENT}) 
             htmlText         = urllib2.urlopen(request).read()
@@ -60,13 +59,13 @@ class SteamScraper():
     def postToFacebook(self):
         graph = facebook.GraphAPI(self.user.access_token)
 
-        #screenshot = Screenshot(
-        #    "http://steamcommunity.com/sharedfiles/filedetails/?id=208701145",
-        #    "http://cloud-4.steampowered.com/ugc/468671739299466501/A842DBBE22E5790870D31C30613707A16F06CA49/",
-        #    "Yay another dragon",
-        #    "Dragon Age: Origins - Ultimate Edition"
-        #)
-        #screenshots.append(screenshots)
+        screenshot = Screenshot(
+            "http://steamcommunity.com/sharedfiles/filedetails/?id=208701145",
+            "http://cloud-4.steampowered.com/ugc/468671739299466501/A842DBBE22E5790870D31C30613707A16F06CA49/",
+            "Yay another dragon",
+            "Dragon Age: Origins - Ultimate Edition"
+        )
+        self.screenshots.append(screenshot)
 
         for screenshot in self.screenshots:
             logging.info(screenshot.game)
@@ -74,17 +73,29 @@ class SteamScraper():
             logging.info(screenshot.src)
             logging.info(screenshot.desc)
 
-            params = dict(
-                method = "POST",
-                object = dict(
-                    app_id      = keys.FB_APP_ID,
-                    type        = "steamscreenshots:screenshot",
-                    title       = screenshot.game + " Screenshot",
-                    url         = screenshot.url,
-                    image       = screenshot.src,
-                    description = screenshot.desc
-                )
-            )
+            params = {
+                'access_token' : self.user.access_token,
+                'name'         : 'Steam Screenshots', 
+            }
+            logging.info(params) 
+
+            #file = urllib.urlopen("https://graph.facebook.com/me/albums", params)
+            #response = file.read()
+            #logging.info(response) 
+
+            res = graph.request("me/albums", post_args=params)
+
+            #params = dict(
+            #    method = "POST",
+            #    object = dict(
+            #        app_id      = keys.FB_APP_ID,
+            #        type        = "steamscreenshots:screenshot",
+            #        title       = screenshot.game + " Screenshot",
+            #        url         = screenshot.url,
+            #        image       = screenshot.src,
+            #        description = screenshot.desc
+            #    )
+            #)
 
             #res = graph.request("me/objects/steamscreenshots:screenshot", args=params)
             #logging.info(res['id'])
@@ -97,15 +108,13 @@ class SteamScraper():
     def process(self, handler, user):
         self.user    = user
         self.handler = handler
-        self.getNewScreenshots()
+        #self.getNewScreenshots()
         self.postToFacebook()
         return
         
 
 class ScrapeSteamHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.headers['Content-Type'] = 'text/plain'
-
         users = User.all()
         for user in users:
             SteamScraper().process(self, user)

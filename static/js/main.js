@@ -7,7 +7,7 @@ $(document).ready(function() {
             } else {
                 console.log("Failed login");
             }
-        }, { scope: 'publish_actions' });
+        }, { scope: 'publish_actions,publish_stream,user_photos' });
 
         return false;
     });
