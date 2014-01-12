@@ -1,31 +1,18 @@
-import sys
-sys.path.insert(0, 'libs')
-from bs4 import BeautifulSoup
-
+import keys
 import facebook
 import os
 import jinja2
 import urllib2
 import webapp2
-import keys
+import logging
 
-from google.appengine.ext import db
 from webapp2_extras import sessions
+from google.appengine.ext import db
+from user import User
 
 
 config = {}
 config['webapp2_extras.sessions'] = dict(secret_key='')
-
-
-class User(db.Model):
-    id                  = db.StringProperty(required=True)
-    created             = db.DateTimeProperty(auto_now_add=True)
-    updated             = db.DateTimeProperty(auto_now=True)
-    name                = db.StringProperty(required=True)
-    profile_url         = db.StringProperty(required=True)
-    access_token        = db.StringProperty(required=True)
-    steam_username      = db.StringProperty(required=False)
-    steam_show_spoilers = db.BooleanProperty(default=False)
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -99,7 +86,7 @@ class SetupHandler(BaseHandler):
     def get(self):
         if self.current_user is None:
             self.redirect('/')
-      
+
         template = jinja_environment.get_template('setup.html')
         self.response.out.write(template.render(dict(
             facebook_app_id = keys.FB_APP_ID,
