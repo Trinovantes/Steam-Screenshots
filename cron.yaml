@@ -1,4 +1,0 @@
-cron:
--   description: Scrape for new screenshots
-    url: /cron/scrape
-    schedule: every 1 hours

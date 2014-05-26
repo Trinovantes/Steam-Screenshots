@@ -1,35 +1,29 @@
-{% include 'templates/header.html' %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Steam Screenshots</title>
 
-{% if not current_user %}
-    <a href="#" id="fb-login-btn">Login</a>
-{% endif %}
+    <link rel="stylesheet/less" href="/static/less/main.less">
+    <script src="/static/js/less.js" type="text/javascript"></script>
+    <!-- 
+    <link rel="stylesheet" href="/static/css/main.css">
+     -->
 
-<div id="fb-root"></div>
-<script>
-    window.fbAsyncInit = function() {
-        FB.init({
-            appId: '{{ facebook_app_id }}', 
-            status: true, 
-            cookie: true,
-            xfbml: true
-        });
+    <!--[if lt IE 9]>
+    <script src="/static/js/html5.js" type="text/javascript"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="grid">
+    <div class="row">
+        <div class="col-12">
+            Hello World!
+        </div>
+    </div>
+</div>
 
-        FB.Event.subscribe('{% if current_user %}auth.logout{% else %}auth.login{% endif %}', function(response) {
-            {% if current_user %}
-            window.location = "/logout" 
-            {% else %} 
-            window.location = "/setup";
-            {% endif %}
-        });
-    };
-    
-    (function() {
-        var e = document.createElement('script');
-        e.type = 'text/javascript';
-        e.src = document.location.protocol + '//connect.facebook.net/en_US/all.js';
-        e.async = true;
-        document.getElementById('fb-root').appendChild(e);
-    }());
-</script>
-
-{% include 'templates/footer.html' %}
+<script src="/static/js/jquery.js"></script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

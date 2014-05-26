@@ -4,26 +4,16 @@ runtime: python27
 api_version: 1
 threadsafe: true
 
-
-
 handlers:
-
--   url: /cron/scrape
-    script: scrape.application
-#    login: admin
-
 -   url: /static
     static_dir: static
-
+-   url: /cron/.*
+    script: scraper.application
 -   url: /.*
     script: main.application
 
-
-
 libraries:
-
 -   name: webapp2
     version: latest
-
 -   name: jinja2
     version: latest

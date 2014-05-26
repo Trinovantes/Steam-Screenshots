@@ -1,128 +1,21 @@
-import keys
-import facebook
-import os
-import jinja2
-import urllib2
 import webapp2
-import logging
+import os
+import urllib
 
-from webapp2_extras import sessions
-from google.appengine.ext import db
-from user import User
+import jinja2
+import webapp2
 
-
-config = {}
-config['webapp2_extras.sessions'] = dict(secret_key='')
-
-
-class BaseHandler(webapp2.RequestHandler):
-    @property
-    def current_user(self):
-        if self.session.get("user"):
-            return self.session.get("user")
-        else:
-            cookie = facebook.get_user_from_cookie(self.request.cookies, keys.FB_APP_ID, keys.FB_APP_SECRET)
-            if cookie:
-                user = User.get_by_key_name(cookie["uid"])
-                if not user:
-                    graph   = facebook.GraphAPI(cookie["access_token"])
-                    profile = graph.get_object("me")
-                    user    = User(
-                        key_name     = str(profile["id"]),
-                        id           = str(profile["id"]),
-                        name         = profile["name"],
-                        profile_url  = profile["link"],
-                        access_token = cookie["access_token"]
-                    )
-                    user.put()
-                elif user.access_token != cookie["access_token"]:
-                    user.access_token = cookie["access_token"]
-                    user.put()
-
-                self.session["user"] = dict(
-                    name                = user.name,
-                    profile_url         = user.profile_url,
-                    id                  = user.id,
-                    access_token        = user.access_token,
-                    steam_username      = user.steam_username,
-                    steam_show_spoilers = user.steam_show_spoilers
-                )
-                return self.session.get("user")
-
-        return None
-
-    def dispatch(self):
-        self.session_store = sessions.get_store(request=self.request)
-        try:
-            webapp2.RequestHandler.dispatch(self)
-        finally:
-            self.session_store.save_sessions(self.response)
-
-    @webapp2.cached_property
-    def session(self):
-        return self.session_store.get_session()
-
-
-class HomeHandler(BaseHandler):
-    def get(self):
-        if self.current_user is not None:
-            self.redirect('/setup')
-        else:
-            template = jinja_environment.get_template('index.html')
-            self.response.out.write(template.render(dict(
-                facebook_app_id = keys.FB_APP_ID,
-                current_user    = self.current_user
-            )))
-
-
-class LogoutHandler(BaseHandler):
-    def get(self):
-        if self.current_user is not None:
-            self.session['user'] = None
-        self.redirect('/')
-
-
-class SetupHandler(BaseHandler):
-    def get(self):
-        if self.current_user is None:
-            self.redirect('/')
-
-        template = jinja_environment.get_template('setup.html')
-        self.response.out.write(template.render(dict(
-            facebook_app_id = keys.FB_APP_ID,
-            current_user    = self.current_user
-        )))
-
-    def post(self):
-        user = User.get_by_key_name(self.current_user['id'])
-        user.steam_username      = self.request.get('steam_username')
-        user.steam_show_spoilers = self.request.get('steam_show_spoilers') == 'True'
-        user.put()
-
-        self.session["user"] = dict(
-            name                = user.name,
-            profile_url         = user.profile_url,
-            id                  = user.id,
-            access_token        = user.access_token,
-            steam_username      = user.steam_username,
-            steam_show_spoilers = user.steam_show_spoilers
-        )
-
-        self.redirect('/setup#saved')
-
-
-jinja_environment = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'views')),
-    extensions=['jinja2.ext.autoescape'],
-    autoescape=True
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader     = jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'views')),
+    extensions = ['jinja2.ext.autoescape'],
+    autoescape = True
 )
 
-application = webapp2.WSGIApplication(
-    [
-        ('/',       HomeHandler),
-        ('/logout', LogoutHandler),
-        ('/setup',  SetupHandler)
-    ],
-    debug=True,
-    config=config
-)
+class MainPage(webapp2.RequestHandler):
+    def get(self):
+        template = JINJA_ENVIRONMENT.get_template('index.html')
+        self.response.write(template.render())
+
+application = webapp2.WSGIApplication([
+    ('/', MainPage),
+], debug = True)
