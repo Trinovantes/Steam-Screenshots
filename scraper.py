@@ -25,10 +25,10 @@ class SteamScraper():
 
     def getNewScreenshots(self):
         current_time = datetime.datetime.now()
-        last_scraped = user.last_scraped
+        last_scraped = self.user.last_scraped
 
         if ((current_time - last_scraped).days > 1):
-            url              = "http://steamcommunity.com/id/" + user.steam_username + "/screenshots/"
+            url              = "http://steamcommunity.com/id/" + self.user.steam_username + "/screenshots/"
             request          = urllib2.Request(url, '', {'User-Agent': self.USER_AGENT}) 
             htmlText         = urllib2.urlopen(request).read()
             soup             = BeautifulSoup(htmlText)

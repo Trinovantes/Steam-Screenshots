@@ -1,7 +1,4 @@
-import webapp2
 import os
-import urllib
-
 import jinja2
 import webapp2
 

@@ -1,8 +1,12 @@
 from google.appengine.ext import db
+from user import User
 
 class Screenshot(db.Model):
-    def __init__(self, url, src, desc, game):
-        self.url  = url
-        self.src  = src
-        self.desc = desc
-        self.game = game
+    owner            = db.ReferenceProperty(User, required=True)
+    screenshot_id    = db.StringProperty(required=True)
+    created          = db.DateTimeProperty(auto_now_add=True)
+    url              = db.LinkProperty(required=True)
+    src              = db.LinkProperty(required=True)
+    desc             = db.StringProperty(required=False)
+    game             = db.TextProperty(required=False)
+    contains_spolier = db.BooleanProperty(default=False)
