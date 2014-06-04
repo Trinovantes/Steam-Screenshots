@@ -13,30 +13,30 @@ from bs4 import BeautifulSoup
 from google.appengine.ext import db
 from models.user import User
 from models.screenshot import Screenshot
+import settings
 
 #------------------------------------------------------------------------------
 # Steam Scraper
 #------------------------------------------------------------------------------
 
 class SteamScraper():
-    USER_AGENT  = "Mozilla/5.0 (Linux; Android 4.2; Nexus 4 Build/JVP15Q) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19"
     screenshots = []
     user        = None
 
-    def getNewScreenshots(self):
+    def processPage(self, page_number):
         current_time = datetime.datetime.now()
         last_scraped = self.user.last_scraped
 
         if ((current_time - last_scraped).days > 1):
-            url              = "http://steamcommunity.com/id/" + self.user.steam_username + "/screenshots/"
-            request          = urllib2.Request(url, '', {'User-Agent': self.USER_AGENT}) 
+            url              = settings.steam_base_url "/id/" + self.user.steam_username + "/screenshots/"
+            request          = urllib2.Request(url, '', {'User-Agent': settings.user_agent}) 
             htmlText         = urllib2.urlopen(request).read()
             soup             = BeautifulSoup(htmlText)
-            screenshot_pages = soup.find_all('a', class_='userScreenshotLink')
+            screenshot_links = soup.find_all('a', class_='userScreenshotLink')
 
-            for page in screenshot_pages:
-                url      = page['href'];
-                request  = urllib2.Request(url, '', {'User-Agent': self.USER_AGENT}) 
+            for link in screenshot_links:
+                url      = link['href'];
+                request  = urllib2.Request(url, '', {'User-Agent': settings.user_agent}) 
                 htmlText = urllib2.urlopen(request).read()
                 soup     = BeautifulSoup(htmlText)
 
@@ -46,14 +46,13 @@ class SteamScraper():
                 screenshot_game = soup.find(id='gameName').find('a', class_='itemLink').string.strip()
 
                 screenshots.append(Screenshot(screenshot_url, screenshot_src, screenshot_desc, screenshot_game))
-                return True # TODO
+            return True
         else:
             return False
         
 
     def process(self, user):
         self.user = user
-        getNewScreenshots()
         return
 
 #------------------------------------------------------------------------------
