@@ -1,3 +1,5 @@
+mkdir -p html
+
 httrack "http://steamcommunity.com/id/trinovantes/screenshots" \
     -O html/ \
     -g \

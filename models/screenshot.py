@@ -10,3 +10,4 @@ class Screenshot(db.Model):
     desc             = db.StringProperty(required=False)
     game             = db.TextProperty(required=False)
     contains_spolier = db.BooleanProperty(default=False)
+    seen_already     = db.BooleanProperty(default=False)

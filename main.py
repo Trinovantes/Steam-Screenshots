@@ -2,6 +2,8 @@ import os
 import jinja2
 import webapp2
 
+import settings
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader     = jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'views')),
     extensions = ['jinja2.ext.autoescape'],
@@ -15,4 +17,4 @@ class MainPage(webapp2.RequestHandler):
 
 application = webapp2.WSGIApplication([
     ('/', MainPage),
-], debug = True)
+], debug = settings.debug)
