@@ -1,0 +1,5 @@
+cron:
+
+-   description:    Scrape User Profiles
+    url:            /scraper/scheduler
+    schedule:       every 24 hours

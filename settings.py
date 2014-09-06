@@ -5,4 +5,4 @@ delay_seconds     = 12 * 60 * 60
 
 if (debug):
     steam_base_url = "http://0.0.0.0:4000"
-    delay_seconds  = -1
+    delay_seconds  = -10
