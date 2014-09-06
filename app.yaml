@@ -13,7 +13,7 @@ handlers:
 
 -   url:        /scraper/.*
     script:     scraper.application
-#    login:      admin
+    login:      admin
 
 -   url:        /ifttt/v1/.*
     script:     ifttt.application

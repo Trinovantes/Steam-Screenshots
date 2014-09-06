@@ -5,14 +5,14 @@ import json
 import urlparse
 import datetime
 
-# Enable loading from libs folder
-import sys
-sys.path.insert(0, 'libs')
-
-from bs4 import BeautifulSoup
 from google.appengine.ext import db
 from google.appengine.api import urlfetch
 from google.appengine.api import taskqueue
+
+import sys # Enable loading from libs folder
+sys.path.insert(0, 'libs')
+from bs4 import BeautifulSoup
+
 from models.user import User
 from models.screenshot import Screenshot
 import settings
@@ -22,7 +22,7 @@ import settings
 #------------------------------------------------------------------------------
 
 def request_soup(url):
-    logging.debug("Getting soup of " + url)
+    logging.debug('Getting soup of ' + url)
 
     result = urlfetch.fetch(
         url,
@@ -45,7 +45,7 @@ class SteamScraper:
         self.next_page_url = self.base_url
 
     def fix_url(self, url):
-        if "http" not in url: # when debugging, the urls are relative instead of absolute
+        if 'http' not in url: # when debugging, the urls are relative instead of absolute
             url = self.base_url + url
         return url
 
@@ -58,7 +58,7 @@ class SteamScraper:
         self.next_page_url = None
 
     def process(self):
-        logging.info("Starting to process \"" + self.user.steam_username + "\" last_scraped:" + self.user.last_scraped.strftime("%Y-%m-%d %H:%M:%S.%f"))
+        logging.info('Starting to process \'' + self.user.steam_username + '\' last_scraped:' + self.user.last_scraped.strftime('%Y-%m-%d %H:%M:%S.%f'))
         while self.next_page_url is not None:
             self.process_list_page(self.next_page_url)
 
@@ -80,7 +80,7 @@ class SteamScraper:
             self.next_page_url = self.fix_url(next_page_arrow.parent['href'])
             
         # iterate over this page's screenshots
-        for link in screenshot_links:
+        for link in screenshot_links: # TODO batch
             screenshot_url = self.fix_url(link['href'])
             self.process_screenshot_page(screenshot_url)
 
@@ -89,7 +89,7 @@ class SteamScraper:
         screenshot_id   = urlparse.parse_qs(parsed_url.query)['id'][0]
 
         # first check if screenshot exists
-        if Screenshot.all().filter("screenshot_id =", screenshot_id).get() is not None:
+        if Screenshot.all().filter('screenshot_id =', screenshot_id).get() is not None:
             return
 
         page_soup = request_soup(screenshot_url)
@@ -110,9 +110,9 @@ class SteamScraper:
         )
         result = s.put()
         if result is db.TransactionFailedError:
-            logging.error("Failed to save screenshot for " + self.user.steam_username + " id:" + screenshot_id)
+            logging.error('Failed to save screenshot for ' + self.user.steam_username + ' id:' + screenshot_id)
         else:
-            logging.debug("Successfully saved screenshot for " + self.user.steam_username + " id:" + screenshot_id)
+            logging.debug('Successfully saved screenshot for ' + self.user.steam_username + ' id:' + screenshot_id)
 
 #------------------------------------------------------------------------------
 # Google App Engine
@@ -121,25 +121,25 @@ class SteamScraper:
 class ScraperTaskHandler(webapp2.RequestHandler):
     def post(self):
         steam_username = self.request.get('steam_username')
-        user = User.all().filter("steam_username =", steam_username).get()
+        user = User.all().filter('steam_username =', steam_username).get()
         scraper = SteamScraper(user)
         scraper.process()
 
 class ScraperSchedulerHandler(webapp2.RequestHandler):
     def get(self):
         if settings.debug:
-            test_user = User.all().filter("steam_username =", "trinovantes").get()
+            test_user = User.all().filter('steam_username =', 'trinovantes').get()
             if test_user is None:
-                test_user = User(steam_username = "trinovantes")
+                test_user = User(steam_username = 'trinovantes')
                 test_user.put()
 
             users = [test_user]
         else:
             more_than_a_day_ago = datetime.now() - timedelta(seconds=-settings.delay_seconds)
-            users = User.all().query("last_scraped <", more_than_a_day_ago)
+            users = User.all().query('last_scraped <', more_than_a_day_ago)
 
         if users is not None:
-            logging.info("Scheduling scrapper on " + str(len(users)) + " user(s)")
+            logging.info('Scheduling scrapper on ' + str(len(users)) + ' user(s)')
             for user in users:
                 taskqueue.add(url='/scraper/run', params={'steam_username': user.steam_username})
 
@@ -147,7 +147,7 @@ class ScraperSchedulerHandler(webapp2.RequestHandler):
 application = webapp2.WSGIApplication([
     ('/scraper/run',       ScraperTaskHandler),
     ('/scraper/scheduler', ScraperSchedulerHandler)
-],debug = settings.debug)
+], debug = settings.debug)
 
 if __name__ == '__main__':
     run_wsgi_app(application)
