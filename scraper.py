@@ -3,7 +3,8 @@ import webapp2
 import logging
 import json
 import urlparse
-import datetime
+from datetime import timedelta
+from datetime import datetime
 
 from google.appengine.ext import db
 from google.appengine.api import urlfetch
@@ -50,7 +51,7 @@ class SteamScraper:
         return url
 
     def finish_user(self):
-        self.user.last_scraped = datetime.datetime.now()
+        self.user.last_scraped = datetime.now()
         self.user.put()
         # clean up so we don't accidently do anything after user's last_scraped property is updated
         self.user          = None
@@ -99,7 +100,7 @@ class SteamScraper:
         screenshot_src  = page_soup.find('img', class_='userScreenshotImg')['src']
         screenshot_desc = page_soup.find('a', class_='secondarynav_pageTitleHeader').string.strip()
         screenshot_game = page_soup.find(id='gameName').find('a', class_='itemLink').string.strip()
-
+#TODO check for spoiler
         s = Screenshot(
             owner         = self.user,
             screenshot_id = screenshot_id,
@@ -136,13 +137,13 @@ class ScraperSchedulerHandler(webapp2.RequestHandler):
             users = [test_user]
         else:
             more_than_a_day_ago = datetime.now() - timedelta(seconds=-settings.delay_seconds)
-            users = User.all().query('last_scraped <', more_than_a_day_ago)
+            users = User.all().filter('last_scraped <', more_than_a_day_ago).fetch(None)
 
         if users is not None:
             logging.info('Scheduling scrapper on ' + str(len(users)) + ' user(s)')
             queue = taskqueue.Queue('scraper-queue')
             for user in users:
-                queue.add(url='/scraper/run', params={'steam_username': user.steam_username})
+                queue.add(taskqueue.Task(url='/scraper/run', params={'steam_username': user.steam_username}))
 
 
 application = webapp2.WSGIApplication([
