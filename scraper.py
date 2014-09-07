@@ -63,10 +63,9 @@ class ListingScraper:
                 }
             ))
 
-        # Queue up next page or set current user as finished
+        # Queue up next page or update the user's last_scraped time
         next_page_arrow = page_soup.find('img', class_='pagingRightArrowImg')
         if next_page_arrow is None:
-            self.user.last_scraped = datetime.now()
             self.user.put()
             self.user = None # cleanup
         else:
@@ -116,14 +115,20 @@ class ScreenshotScraper:
         if page_soup is None:
             return
 
+        screenshot_creation_date = page_soup.find(id='dateTaken').find_all('span')[1].string.strip()
+        screenshot_creation_date = datetime.strptime(screenshot_creation_date, '%b %d, %Y @ %I:%M%p')
+
+        #TODO Check for spoiler tag
+        #TODO Check for NSFW text in desc
+
         screenshot_src  = page_soup.find('img', class_='userScreenshotImg')['src']
         screenshot_desc = page_soup.find('a', class_='secondarynav_pageTitleHeader').string.strip()
         screenshot_game = page_soup.find(id='gameName').find('a', class_='itemLink').string.strip()
-        #TODO Check for spoiler tag
         
         s = Screenshot(
             parent        = self.user,
             screenshot_id = screenshot_id,
+            date_taken    = screenshot_creation_date,
             url           = screenshot_page_url,
             src           = screenshot_src,
             desc          = screenshot_desc,

@@ -1,7 +1,7 @@
 import webapp2
 import logging
 import json
-
+from datetime import datetime
 from google.appengine.ext import db
 from google.appengine.api import urlfetch
 
@@ -10,6 +10,27 @@ from models.screenshot import Screenshot
 import settings
 import helpers
 import private
+
+#------------------------------------------------------------------------------
+# Globals
+#------------------------------------------------------------------------------
+
+IFTTT_TRIGGER_FIELD_USERNAME_KEY      = 'steam_username'
+IFTTT_TRIGGER_FIELD_SHOW_SPOILERS_KEY = 'show_spoilers'
+IFTTT_TRIGGER_FIELD_SHOW_NSFW_KEY     = 'show_nsfw'
+
+IFTTT_INGREDIENT_SCREENSHOT_PAGE_KEY     = 'screenshot_page'
+IFTTT_INGREDIENT_SCREENSHOT_URL_KEY      = 'screenshot_url'
+IFTTT_INGREDIENT_SCREENSHOT_CAPTION_KEY  = 'screenshot_caption'
+IFTTT_INGREDIENT_SCREENSHOT_USERNAME_KEY = 'steam_username'
+IFTTT_INGREDIENT_SCREENSHOT_GAME_KEY     = 'game'
+IFTTT_INGREDIENT_META_LABEL_KEY     = 'meta'
+IFTTT_INGREDIENT_META_ID_KEY        = 'id'
+IFTTT_INGREDIENT_META_TIMESTAMP_KEY = 'timestamp'
+
+IFTTT_PARAM_TRIGGERFIELDS_KEY = 'triggerFields'
+IFTTT_PARAM_LIMIT_KEY         = 'limit'
+IFTTT_DEFAULT_TRIGGER_LIMIT   = 50
 
 #------------------------------------------------------------------------------
 # Exception Classes
@@ -76,25 +97,76 @@ class JSONRequestHandler(webapp2.RequestHandler):
 # Trigger
 #------------------------------------------------------------------------------
 
-class TriggerHandler(JSONRequestHandler):
-    steam_username = None
-    show_spoilers  = False
+class ScreenshotTriggerHandler(JSONRequestHandler):
+    user  = None
+    limit = IFTTT_DEFAULT_TRIGGER_LIMIT
 
     def parseTriggerFields(self):
-        if 'triggerFields' not in self.request.headers:
+        body = json.loads(self.request.body)
+        if IFTTT_PARAM_TRIGGERFIELDS_KEY not in body:
             raise InvalidTriggerFieldsException()
 
-        triggerFields = self.request.headers['triggerFields']
-        if not triggerFields:
+        triggerFields = body[IFTTT_PARAM_TRIGGERFIELDS_KEY]
+        if not triggerFields or \
+        IFTTT_TRIGGER_FIELD_SHOW_SPOILERS_KEY not in triggerFields or \
+        IFTTT_TRIGGER_FIELD_SHOW_NSFW_KEY not in triggerFields:
             raise InvalidTriggerFieldsException()
 
-        self.steam_username = triggerFields['steam_username']
-        show_spoilers       = triggerFields['show_spoilers']
+        # Create user if it doesn't already exist
+        username      = triggerFields[IFTTT_TRIGGER_FIELD_USERNAME_KEY]
+        show_spoilers = ('yes' == triggerFields[IFTTT_TRIGGER_FIELD_SHOW_SPOILERS_KEY])
+        show_nsfw     = ('yes' == triggerFields[IFTTT_TRIGGER_FIELD_SHOW_NSFW_KEY])
+        self.user = User.all().filter('steam_username =', username).get()
+        if self.user is None:
+            if is_valid_username(username):
+                self.user = User(
+                    steam_username      = self.user.steam_username, 
+                    steam_show_spoilers = show_spoilers,
+                    steam_show_nsfw     = show_nsfw
+                )
+                self.user.put()
+            else:
+                raise InvalidTriggerFieldsException()
+
+    def parseLimit(self):
+        body = json.loads(self.request.body)
+        if IFTTT_PARAM_LIMIT_KEY in body:
+            self.limit = int(body[IFTTT_PARAM_LIMIT_KEY])
 
     def post(self):
-        checkChannelKey()
-        parseTriggerFields()
-        createNewUserIfNotExist()
+        self.checkChannelKey()
+        self.parseTriggerFields()
+        self.parseLimit()
+
+        screenshots_query = Screenshot.all()
+        screenshots_query.ancestor(self.user)
+        screenshots_query.filter('seen_already =', False)
+        # FIXME
+        # if not self.user.steam_show_spoilers:
+        #     screenshots_query.filter('is_spoiler =', False)
+        # if not self.user.steam_show_nsfw:
+        #     screenshots_query.filter('is_nsfw =', False)
+        screenshots_query.order('date_taken')
+
+        screenshots     = screenshots_query.fetch(self.limit)
+        screenshot_data = []
+        for screenshot in screenshots:
+            screenshot_data.append({
+                IFTTT_INGREDIENT_SCREENSHOT_PAGE_KEY:       screenshot.url,
+                IFTTT_INGREDIENT_SCREENSHOT_URL_KEY:        screenshot.src,
+                IFTTT_INGREDIENT_SCREENSHOT_CAPTION_KEY:    screenshot.desc,
+                IFTTT_INGREDIENT_SCREENSHOT_USERNAME_KEY:   self.user.steam_username,
+                IFTTT_INGREDIENT_SCREENSHOT_GAME_KEY:       screenshot.game,
+                IFTTT_INGREDIENT_META_LABEL_KEY: {
+                    IFTTT_INGREDIENT_META_ID_KEY:           screenshot.screenshot_id,
+                    IFTTT_INGREDIENT_META_TIMESTAMP_KEY:    int((screenshot.date_taken - datetime(1970, 1, 1)).total_seconds())
+                }
+            })
+            screenshot.seen_already = True
+
+        db.put(screenshots) # Save the seen_already flags
+        self.setResponseHeaders()
+        self.response.out.write(json.dumps({'data': screenshot_data}))
 
 #------------------------------------------------------------------------------
 # Validation
@@ -113,7 +185,7 @@ def is_valid_username(username):
     page_soup = helpers.request_soup(url, False)
     return page_soup is not None and 'Error' not in page_soup.find('title').string
 
-class TriggerFieldsValidationHandler(JSONRequestHandler):
+class ScreenshotTriggerFieldsValidationHandler(JSONRequestHandler):
     def getBodyValue(self):
         body = json.loads(self.request.body)
         if 'value' in body:
@@ -151,7 +223,8 @@ class TriggerFieldsValidationHandler(JSONRequestHandler):
 
 class TestHandler(JSONRequestHandler):
     def post(self):
-        checkChannelKey()
+        self.checkChannelKey()
+        self.setResponseHeaders()
 
 #------------------------------------------------------------------------------
 # Action (unsupported)
@@ -174,8 +247,8 @@ class StatusHandler(JSONRequestHandler):
 #------------------------------------------------------------------------------
   
 application = webapp2.WSGIApplication([
-    ('/ifttt/v1/triggers/new_screenshot_uploaded', TriggerHandler),
-    ('/ifttt/v1/triggers/new_screenshot_uploaded/fields/(\w+)/validate', TriggerFieldsValidationHandler),
+    ('/ifttt/v1/triggers/new_screenshot_uploaded', ScreenshotTriggerHandler),
+    ('/ifttt/v1/triggers/new_screenshot_uploaded/fields/(\w+)/validate', ScreenshotTriggerFieldsValidationHandler),
     ('/ifttt/v1/test/setup', TestHandler),
     ('/ifttt/v1/actions/.*', ActionHandler),
     ('/ifttt/v1/status', StatusHandler)

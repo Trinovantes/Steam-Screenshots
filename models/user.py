@@ -1,3 +1,4 @@
+
 from google.appengine.ext import db
 
 class User(db.Model):
@@ -5,3 +6,4 @@ class User(db.Model):
     last_scraped        = db.DateTimeProperty(auto_now=True)
     steam_username      = db.StringProperty(required=True)
     steam_show_spoilers = db.BooleanProperty(default=False)
+    steam_show_nsfw     = db.BooleanProperty(default=False)
