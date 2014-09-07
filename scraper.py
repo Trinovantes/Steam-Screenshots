@@ -140,8 +140,9 @@ class ScraperSchedulerHandler(webapp2.RequestHandler):
 
         if users is not None:
             logging.info('Scheduling scrapper on ' + str(len(users)) + ' user(s)')
+            queue = taskqueue.Queue('scraper-queue')
             for user in users:
-                taskqueue.add(url='/scraper/run', params={'steam_username': user.steam_username})
+                queue.add(url='/scraper/run', params={'steam_username': user.steam_username})
 
 
 application = webapp2.WSGIApplication([
