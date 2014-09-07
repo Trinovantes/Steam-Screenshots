@@ -2,7 +2,6 @@ from google.appengine.ext import db
 from user import User
 
 class Screenshot(db.Model):
-    owner            = db.ReferenceProperty(User, required=True)
     screenshot_id    = db.StringProperty(required=True)
     created          = db.DateTimeProperty(auto_now_add=True)
     url              = db.LinkProperty(required=True)

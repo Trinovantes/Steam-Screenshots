@@ -140,7 +140,7 @@ class ScreenshotScraper:
         #TODO Check for spoiler tag
         
         s = Screenshot(
-            owner         = self.user,
+            parent        = self.user,
             screenshot_id = screenshot_id,
             url           = screenshot_page_url,
             src           = screenshot_src,
