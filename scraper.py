@@ -7,16 +7,12 @@ import time
 from datetime import timedelta
 from datetime import datetime
 from google.appengine.ext import db
-from google.appengine.api import urlfetch
 from google.appengine.api import taskqueue
-
-import sys # Enable loading from libs folder
-sys.path.insert(0, 'libs')
-from bs4 import BeautifulSoup
 
 from models.user import User
 from models.screenshot import Screenshot
 import settings
+import helpers
 
 #------------------------------------------------------------------------------
 # Globals
@@ -29,23 +25,9 @@ HEADER_NEXT_PAGE_KEY      = 'current_page_url'
 listing_queue    = taskqueue.Queue('listing-queue')
 screenshot_queue = taskqueue.Queue('screenshot-queue')
 
-def request_soup(url):
-    result = urlfetch.fetch(
-        url,
-        headers = {'User-Agent': settings.user_agent}
-    )
-    if result.status_code == 200:
-        return BeautifulSoup(result.content)
-    else:
-        logging.error('Received ' +  str(result.status_code) + ' error from ' + url)
-        return None  
-
 #------------------------------------------------------------------------------
 # Listing Scraper
 #------------------------------------------------------------------------------
-
-def get_base_url(username):
-    return settings.steam_base_url + '/id/' + username + '/screenshots/'    
 
 class ListingScraper:
     user = None
@@ -55,7 +37,7 @@ class ListingScraper:
 
     def fix_url(self, url):
         if 'http' not in url: # When debugging, the urls are relative instead of absolute
-            url = get_base_url(self.user.steam_username) + url
+            url = helpers.get_profile_screenshot_url(self.user.steam_username) + url
         return url
 
     def run(self, current_page_url):
@@ -64,7 +46,7 @@ class ListingScraper:
             return
 
         logging.info('Processing \'' + current_page_url + '\' steam_username:' + self.user.steam_username + ' last_scraped:' + self.user.last_scraped.strftime('%Y-%m-%d %H:%M:%S.%f'))
-        page_soup = request_soup(current_page_url)
+        page_soup = helpers.request_soup(current_page_url)
 
         # Check if we got 200 from Steam
         if page_soup is None:
@@ -103,7 +85,7 @@ class ListingScraperHandler(webapp2.RequestHandler):
 
         # If this task is queued up by the scheduler, then use the base url
         if not next_page_url:
-            next_page_url = get_base_url(username)
+            next_page_url = helpers.get_profile_screenshot_url(username)
 
         scraper = ListingScraper(username)
         scraper.run(next_page_url)
@@ -130,7 +112,7 @@ class ScreenshotScraper:
             return
 
         # Then check if we got 200 from Steam
-        page_soup = request_soup(screenshot_page_url)
+        page_soup = helpers.request_soup(screenshot_page_url)
         if page_soup is None:
             return
 
