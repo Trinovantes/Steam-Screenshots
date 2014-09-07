@@ -1,4 +1,9 @@
 queue:
--   name: scraper-queue
-    rate: 10/m
-    bucket_size: 100
+
+-   name:           listing-queue
+    rate:           10/m
+    bucket_size:    100
+
+-   name:           screenshot-queue
+    rate:           1/s
+    bucket_size:    100
