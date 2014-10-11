@@ -51,7 +51,7 @@ class ListingScraper:
         # Check if we got 200 from Steam
         if page_soup is None:
             return
-        
+
         # Iterate over this page's screenshots
         screenshot_links = page_soup.find_all('a', class_='userScreenshotLink')
         for link in screenshot_links:
@@ -67,10 +67,10 @@ class ListingScraper:
         next_page_arrow = page_soup.find('img', class_='pagingRightArrowImg')
         if next_page_arrow is None:
             self.user.put()
-            self.user = None # cleanup
+            self.user = None # Cleanup
         else:
             listing_queue.add(taskqueue.Task(
-                url = '/scraper/listing', 
+                url = '/scraper/listing',
                 params = {
                     HEADER_STEAM_USERNAME_KEY:  self.user.steam_username,
                     HEADER_NEXT_PAGE_KEY:       self.fix_url(next_page_arrow.parent['href'])
@@ -82,7 +82,8 @@ class ListingScraperHandler(webapp2.RequestHandler):
         username = self.request.get(HEADER_STEAM_USERNAME_KEY)
         next_page_url = self.request.get(HEADER_NEXT_PAGE_KEY)
 
-        # If this task is queued up by the scheduler, then use the base url
+        # If this task is queued up by itself, then there should be a next page key
+        # Otherwise it's queued up by the scheduler so use the base url
         if not next_page_url:
             next_page_url = helpers.get_profile_screenshot_url(username)
 
@@ -124,7 +125,7 @@ class ScreenshotScraper:
         screenshot_src  = page_soup.find('img', class_='userScreenshotImg')['src']
         screenshot_desc = page_soup.find('a', class_='secondarynav_pageTitleHeader').string.strip()
         screenshot_game = page_soup.find(id='gameName').find('a', class_='itemLink').string.strip()
-        
+
         s = Screenshot(
             parent        = self.user,
             screenshot_id = screenshot_id,
@@ -167,7 +168,7 @@ class ScraperSchedulerHandler(webapp2.RequestHandler):
             logging.info('Scheduling scrapper on ' + str(len(users)) + ' user(s)')
             for user in users:
                 listing_queue.add(taskqueue.Task(
-                    url = '/scraper/listing', 
+                    url = '/scraper/listing',
                     params = {
                         HEADER_STEAM_USERNAME_KEY: user.steam_username
                     }

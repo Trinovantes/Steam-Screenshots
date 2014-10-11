@@ -102,6 +102,9 @@ class ScreenshotTriggerHandler(JSONRequestHandler):
     limit = IFTTT_DEFAULT_TRIGGER_LIMIT
 
     def parseTriggerFields(self):
+        if not self.request.body:
+            raise InvalidTriggerFieldsException()
+
         body = json.loads(self.request.body)
         if IFTTT_PARAM_TRIGGERFIELDS_KEY not in body:
             raise InvalidTriggerFieldsException()
@@ -120,7 +123,7 @@ class ScreenshotTriggerHandler(JSONRequestHandler):
         if self.user is None:
             if is_valid_username(username):
                 self.user = User(
-                    steam_username      = self.user.steam_username, 
+                    steam_username      = self.user.steam_username,
                     steam_show_spoilers = show_spoilers,
                     steam_show_nsfw     = show_nsfw
                 )
@@ -141,11 +144,10 @@ class ScreenshotTriggerHandler(JSONRequestHandler):
         screenshots_query = Screenshot.all()
         screenshots_query.ancestor(self.user)
         screenshots_query.filter('seen_already =', False)
-        # FIXME
-        # if not self.user.steam_show_spoilers:
-        #     screenshots_query.filter('is_spoiler =', False)
-        # if not self.user.steam_show_nsfw:
-        #     screenshots_query.filter('is_nsfw =', False)
+        if not self.user.steam_show_spoilers:
+            screenshots_query.filter('is_spoiler =', False)
+        if not self.user.steam_show_nsfw:
+            screenshots_query.filter('is_nsfw =', False)
         screenshots_query.order('date_taken')
 
         screenshots     = screenshots_query.fetch(self.limit)
@@ -187,6 +189,9 @@ def is_valid_username(username):
 
 class ScreenshotTriggerFieldsValidationHandler(JSONRequestHandler):
     def getBodyValue(self):
+        if not self.request.body:
+            return None
+
         body = json.loads(self.request.body)
         if 'value' in body:
             return body['value']
@@ -199,6 +204,9 @@ class ScreenshotTriggerFieldsValidationHandler(JSONRequestHandler):
             self.setResponseHeaders()
 
             username = self.getBodyValue()
+            if not username:
+                username = '[None]'
+
             if is_valid_username(username):
                 output = {
                     'data':  {
@@ -245,7 +253,7 @@ class StatusHandler(JSONRequestHandler):
 #------------------------------------------------------------------------------
 # Google App Engine
 #------------------------------------------------------------------------------
-  
+
 application = webapp2.WSGIApplication([
     ('/ifttt/v1/triggers/new_screenshot_uploaded', ScreenshotTriggerHandler),
     ('/ifttt/v1/triggers/new_screenshot_uploaded/fields/(\w+)/validate', ScreenshotTriggerFieldsValidationHandler),
