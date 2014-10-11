@@ -119,12 +119,17 @@ class ScreenshotScraper:
         screenshot_creation_date = page_soup.find(id='dateTaken').find_all('span')[1].string.strip()
         screenshot_creation_date = datetime.strptime(screenshot_creation_date, '%b %d, %Y @ %I:%M%p')
 
-        #TODO Check for spoiler tag
-        #TODO Check for NSFW text in desc
+        # TODO Smarter check for spoiler tag
+        #
+        # Apparently the spoiler html element is only on the desktop version
+        # so I probably have to schedule a separate task just to search the
+        # desktop listings for potential spoilers
 
-        screenshot_src  = page_soup.find('img', class_='userScreenshotImg')['src']
-        screenshot_desc = page_soup.find('a', class_='secondarynav_pageTitleHeader').string.strip()
-        screenshot_game = page_soup.find(id='gameName').find('a', class_='itemLink').string.strip()
+        screenshot_src        = page_soup.find('img', class_='userScreenshotImg')['src']
+        screenshot_desc       = page_soup.find('h1', class_='captionText').string.strip()
+        screenshot_is_spoiler = "spoiler" in screenshot_desc.lower()
+        screenshot_is_nsfw    = "nsfw" in screenshot_desc.lower()
+        screenshot_game       = page_soup.find(id='gameName').find('a', class_='itemLink').string.strip()
 
         s = Screenshot(
             parent        = self.user,
@@ -133,7 +138,9 @@ class ScreenshotScraper:
             url           = screenshot_page_url,
             src           = screenshot_src,
             desc          = screenshot_desc,
-            game          = screenshot_game
+            game          = screenshot_game,
+            is_spoiler    = screenshot_is_spoiler,
+            is_nsfw       = screenshot_is_nsfw
         )
         result = s.put()
         if result is db.TransactionFailedError:
