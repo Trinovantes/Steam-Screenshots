@@ -117,7 +117,12 @@ class ScreenshotScraper:
             return
 
         screenshot_creation_date = page_soup.find(id='dateTaken').find_all('span')[1].string.strip()
-        screenshot_creation_date = datetime.strptime(screenshot_creation_date, '%b %d, %Y @ %I:%M%p')
+        try:
+            # Try to parse the screenshot's date
+            # Note: if the screenshot was taken this year, the year does not show up
+            screenshot_creation_date = datetime.strptime(screenshot_creation_date, '%b %d, %Y @ %I:%M%p')
+        except ValueError:
+            screenshot_creation_date = datetime.strptime(screenshot_creation_date, '%b %d @ %I:%M%p')
 
         # TODO Smarter check for spoiler tag
         #
