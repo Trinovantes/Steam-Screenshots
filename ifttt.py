@@ -260,4 +260,4 @@ application = webapp2.WSGIApplication([
     ('/ifttt/v1/test/setup', TestHandler),
     ('/ifttt/v1/actions/.*', ActionHandler),
     ('/ifttt/v1/status', StatusHandler)
-], debug = True)
+], debug = debug)

@@ -22,8 +22,8 @@ TEST_USERNAME             = 'trinovantes'
 HEADER_STEAM_USERNAME_KEY = 'steam_username'
 HEADER_NEXT_PAGE_KEY      = 'current_page_url'
 
-listing_queue    = taskqueue.Queue('listing-queue')
-screenshot_queue = taskqueue.Queue('screenshot-queue')
+listing_queue    = taskqueue.Queue('listing_queue')
+screenshot_queue = taskqueue.Queue('screenshot_queue')
 
 #------------------------------------------------------------------------------
 # Listing Scraper
