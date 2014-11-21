@@ -2,12 +2,12 @@ Running Locally
 ---
 
 ```
-gae-server --log_level debug .
+{Path to Google App Engine}/dev_appserver.py --log_level debug .
 ```
 
 Uploading to Server
 ---
 
 ```
-gae-upload --oauth2 update .
+{Path to Google App Engine}/appcfg.py --oauth2 update .
 ```
