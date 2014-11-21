@@ -22,8 +22,8 @@ TEST_USERNAME             = 'trinovantes'
 HEADER_STEAM_USERNAME_KEY = 'steam_username'
 HEADER_NEXT_PAGE_KEY      = 'current_page_url'
 
-listing_queue    = taskqueue.Queue('listing_queue')
-screenshot_queue = taskqueue.Queue('screenshot_queue')
+listing_queue    = taskqueue.Queue('listing-queue')
+screenshot_queue = taskqueue.Queue('screenshot-queue')
 
 #------------------------------------------------------------------------------
 # Listing Scraper
@@ -167,12 +167,14 @@ class ScreenshotScraperHandler(webapp2.RequestHandler):
 class ScraperSchedulerHandler(webapp2.RequestHandler):
     def get(self):
         if settings.debug:
+            logging.info('Running Scheduler - Debug')
             test_user = User.all().filter('steam_username =', TEST_USERNAME).get()
             if test_user is None:
                 test_user = User(steam_username=TEST_USERNAME)
                 test_user.put()
             users = [test_user]
         else:
+            logging.info('Running Scheduler - Production')
             more_than_a_day_ago = datetime.now() - timedelta(seconds=-settings.delay_seconds)
             users = User.all().filter('last_scraped <', more_than_a_day_ago).fetch(None)
 

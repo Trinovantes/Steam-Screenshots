@@ -1,9 +1,9 @@
 queue:
 
--   name:           listing_queue
+-   name:           listing-queue
     rate:           10/m
     bucket_size:    100
 
--   name:           screenshot_queue
+-   name:           screenshot-queue
     rate:           1/s
     bucket_size:    100
