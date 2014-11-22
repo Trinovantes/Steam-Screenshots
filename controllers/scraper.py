@@ -187,13 +187,3 @@ class ScraperSchedulerHandler(webapp2.RequestHandler):
                         HEADER_STEAM_USERNAME_KEY: user.steam_username
                     }
                 ))
-
-
-application = webapp2.WSGIApplication([
-    ('/scraper/listing',    ListingScraperHandler),
-    ('/scraper/screenshot', ScreenshotScraperHandler),
-    ('/scraper/scheduler',  ScraperSchedulerHandler)
-], debug = settings.debug)
-
-if __name__ == '__main__':
-    run_wsgi_app(application)

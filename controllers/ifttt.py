@@ -15,6 +15,8 @@ import private
 # Globals
 #------------------------------------------------------------------------------
 
+HEADER_CHANNEL_KEY = 'IFTTT-Channel-Key'
+
 IFTTT_TRIGGER_FIELD_USERNAME_KEY      = 'steam_username'
 IFTTT_TRIGGER_FIELD_SHOW_SPOILERS_KEY = 'show_spoilers'
 IFTTT_TRIGGER_FIELD_SHOW_NSFW_KEY     = 'show_nsfw'
@@ -67,8 +69,8 @@ class JSONRequestHandler(webapp2.RequestHandler):
         if 'IFTTT-Channel-Key' not in self.request.headers:
             raise InvalidChannelKeyException()
 
-        channel_key = self.request.headers['IFTTT-Channel-Key']
-        if channel_key != private.ifttt_channel_key:
+        channel_key = self.request.headers[HEADER_CHANNEL_KEY]
+        if channel_key != private.IFTTT_CHANNEL_KEY:
             raise InvalidChannelKeyException()
 
     def get(self, *params):
@@ -89,8 +91,9 @@ class JSONRequestHandler(webapp2.RequestHandler):
             self.setResponseHeaders()
             self.response.set_status(exception.code)
             self.response.out.write(json.dumps(error))
-            logging.warning(exception.message + ' request received from ' + self.request.remote_addr)
+            logging.warning(exception.message + ' request received from ' + str(self.request.remote_addr))
         else:
+            # Default handler
             webapp2.RequestHandler.handle_exception(self, exception, debug_mode)
 
 #------------------------------------------------------------------------------
@@ -204,9 +207,6 @@ class ScreenshotTriggerFieldsValidationHandler(JSONRequestHandler):
             self.setResponseHeaders()
 
             username = self.getBodyValue()
-            if not username:
-                username = '[None]'
-
             if is_valid_username(username):
                 output = {
                     'data':  {
@@ -217,7 +217,7 @@ class ScreenshotTriggerFieldsValidationHandler(JSONRequestHandler):
                 output = {
                     'data':  {
                         'valid': False,
-                        'message': username + ' does not exist on Steam'
+                        'message': str(username) + ' does not exist on Steam'
                     }
                 }
 
@@ -249,15 +249,3 @@ class StatusHandler(JSONRequestHandler):
     def get(self):
         self.checkChannelKey()
         self.setResponseHeaders()
-
-#------------------------------------------------------------------------------
-# Google App Engine
-#------------------------------------------------------------------------------
-
-application = webapp2.WSGIApplication([
-    ('/ifttt/v1/triggers/new_screenshot_uploaded', ScreenshotTriggerHandler),
-    ('/ifttt/v1/triggers/new_screenshot_uploaded/fields/(\w+)/validate', ScreenshotTriggerFieldsValidationHandler),
-    ('/ifttt/v1/test/setup', TestHandler),
-    ('/ifttt/v1/actions/.*', ActionHandler),
-    ('/ifttt/v1/status', StatusHandler)
-], debug = settings.debug)

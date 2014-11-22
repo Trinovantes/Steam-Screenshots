@@ -1,7 +1,7 @@
 from google.appengine.api import urlfetch
 
-import sys # Enable loading from libs folder
-sys.path.insert(0, 'libs')
+import sys
+sys.path.insert(0, 'libs') # Add /libs/ folder to $PATH
 from bs4 import BeautifulSoup
 
 import settings

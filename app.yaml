@@ -11,15 +11,8 @@ handlers:
 -   url:        /static
     static_dir: static
 
--   url:        /scraper/.*
-    script:     scraper.application
-    login:      admin
-
--   url:        /ifttt/v1/.*
-    script:     ifttt.application
-
 -   url:        .*
-    script:     main.application
+    script:     urls.application
 
 #------------------------------------------------------------------------------
 
