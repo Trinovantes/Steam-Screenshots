@@ -32,7 +32,7 @@ IFTTT_INGREDIENT_META_TIMESTAMP_KEY = 'timestamp'
 
 IFTTT_PARAM_TRIGGERFIELDS_KEY = 'triggerFields'
 IFTTT_PARAM_LIMIT_KEY         = 'limit'
-IFTTT_DEFAULT_TRIGGER_LIMIT   = 50
+IFTTT_DEFAULT_TRIGGER_LIMIT   = 10
 
 #------------------------------------------------------------------------------
 # Exception Classes
