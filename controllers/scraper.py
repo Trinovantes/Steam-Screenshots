@@ -120,9 +120,9 @@ class ScreenshotScraper:
         try:
             # Try to parse the screenshot's date
             # Note: if the screenshot was taken this year, the year does not show up
-            screenshot_creation_date = datetime.strptime(screenshot_creation_date, '%b %d, %Y @ %I:%M%p')
+            screenshot_creation_date = datetime.strptime(screenshot_creation_date, '%d %b, %Y @ %I:%M%p')
         except ValueError:
-            screenshot_creation_date = datetime.strptime(screenshot_creation_date, '%b %d @ %I:%M%p')
+            screenshot_creation_date = datetime.strptime(screenshot_creation_date, '%d %b @ %I:%M%p')
 
         # TODO Smarter check for spoiler tag
         #
