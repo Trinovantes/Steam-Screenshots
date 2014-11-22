@@ -13,38 +13,14 @@ indexes:
 - kind: Screenshot
   ancestor: yes
   properties:
-  - name: date_taken
+  - name: is_nsfw
+  - name: is_spoiler
+  - name: scraped
 
 - kind: Screenshot
   ancestor: yes
   properties:
   - name: is_nsfw
   - name: is_spoiler
-  - name: date_taken
-
-- kind: Screenshot
-  ancestor: yes
-  properties:
-  - name: is_nsfw
-  - name: is_spoiler
-  - name: seen_already
-  - name: date_taken
-
-- kind: Screenshot
-  ancestor: yes
-  properties:
-  - name: is_spoiler
-  - name: date_taken
-
-- kind: Screenshot
-  ancestor: yes
-  properties:
-  - name: is_spoiler
-  - name: seen_already
-  - name: date_taken
-
-- kind: Screenshot
-  ancestor: yes
-  properties:
-  - name: seen_already
-  - name: date_taken
+  - name: scraped
+    direction: desc

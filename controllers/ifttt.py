@@ -62,7 +62,7 @@ class InvalidTriggerFieldsException(IFTTTException):
 
 class JSONRequestHandler(webapp2.RequestHandler):
     def setResponseHeaders(self):
-        self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Content-Type'] = 'application/json; charset=utf-8'
         self.response.set_status(200)
 
     def checkChannelKey(self):
@@ -152,7 +152,6 @@ class ScreenshotTriggerHandler(JSONRequestHandler):
             screenshots_query.filter('is_spoiler =', False)
         if not self.user.steam_show_nsfw:
             screenshots_query.filter('is_nsfw =', False)
-        screenshots_query.order('date_taken')
 
         screenshots     = screenshots_query.fetch(self.limit)
         screenshot_data = []
@@ -165,14 +164,20 @@ class ScreenshotTriggerHandler(JSONRequestHandler):
                 IFTTT_INGREDIENT_SCREENSHOT_GAME_KEY:       screenshot.game,
                 IFTTT_INGREDIENT_META_LABEL_KEY: {
                     IFTTT_INGREDIENT_META_ID_KEY:           screenshot.screenshot_id,
-                    IFTTT_INGREDIENT_META_TIMESTAMP_KEY:    int((screenshot.date_taken - datetime(1970, 1, 1)).total_seconds())
+                    IFTTT_INGREDIENT_META_TIMESTAMP_KEY:    int((screenshot.scraped - datetime(1970, 1, 1)).total_seconds())
                 }
             })
             screenshot.seen_already = True
 
-        db.put(screenshots) # Save the seen_already flags
+        # Save the seen_already flags
+        db.put(screenshots)
+
+
         self.setResponseHeaders()
-        self.response.out.write(json.dumps({'data': screenshot_data}))
+        self.response.out.write(json.dumps({
+            # Sort by timestsamp because apparently the db query isn't sorted by scraped date
+            'data': sorted(screenshot_data, reverse=True, key=lambda k: k[IFTTT_INGREDIENT_META_LABEL_KEY][IFTTT_INGREDIENT_META_TIMESTAMP_KEY])
+        }))
 
 #------------------------------------------------------------------------------
 # Validation
@@ -234,6 +239,27 @@ class TestHandler(JSONRequestHandler):
     def post(self):
         self.checkChannelKey()
         self.setResponseHeaders()
+
+        test_data = {
+            'samples': {
+                'triggers': {
+                    'new_screenshot_uploaded': {
+                        IFTTT_TRIGGER_FIELD_USERNAME_KEY: 'trinovantes',
+                        IFTTT_TRIGGER_FIELD_SHOW_SPOILERS_KEY: 'no',
+                        IFTTT_TRIGGER_FIELD_SHOW_NSFW_KEY: 'no'
+                    }
+                },
+                'triggerFieldValidations': {
+                    'new_screenshot_uploaded': {
+                        'steam_username': {
+                            'valid': 'trinovantes',
+                            'invalid': 'trinoventes'
+                        }
+                    }
+                }
+            }
+        }
+        self.response.out.write(json.dumps({'data': test_data}))
 
 #------------------------------------------------------------------------------
 # Action (unsupported)

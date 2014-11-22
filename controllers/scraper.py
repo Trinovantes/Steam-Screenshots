@@ -118,18 +118,6 @@ class ScreenshotScraper:
             return
         logging.info('Retrieved screenshot: ' + screenshot_page_url)
 
-        screenshot_creation_date = page_soup.find(id='dateTaken').find_all('span')[1].string.strip()
-        date_formats = ['%d %b, %Y @ %I:%M%p', '%d %b @ %I:%M%p', '%b %d, %Y @ %I:%M%p', '%b %d @ %I:%M%p']
-        for date_format in date_formats:
-            try:
-                # Try to parse the screenshot's date
-                # Note: if the screenshot was taken this year, the year does not show up
-                screenshot_creation_date = datetime.strptime(screenshot_creation_date, date_format)
-            except ValueError:
-                pass
-            else:
-                break
-
         # TODO Smarter check for spoiler tag
         #
         # Apparently the spoiler html element is only on the desktop version
@@ -142,13 +130,9 @@ class ScreenshotScraper:
         screenshot_is_nsfw    = "nsfw" in screenshot_desc.lower()
         screenshot_game       = page_soup.find(id='gameName').find('a', class_='itemLink').string.strip()
 
-        # Remove non-ASCII characters (e.g. superscript TM)
-        re.sub(r'[^\x00-\x7F]+', '', screenshot_game)
-
         s = Screenshot(
             parent        = self.user,
             screenshot_id = screenshot_id,
-            date_taken    = screenshot_creation_date,
             url           = screenshot_page_url,
             src           = screenshot_src,
             desc          = screenshot_desc,

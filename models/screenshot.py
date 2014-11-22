@@ -4,7 +4,6 @@ from user import User
 class Screenshot(db.Model):
     screenshot_id = db.StringProperty(required=True)
     scraped       = db.DateTimeProperty(auto_now_add=True)
-    date_taken    = db.DateTimeProperty(required=True)
     url           = db.LinkProperty(required=True)
     src           = db.LinkProperty(required=True)
     desc          = db.StringProperty(required=False)
