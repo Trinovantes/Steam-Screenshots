@@ -5,5 +5,5 @@ queue:
     bucket_size:    100
 
 -   name:           screenshot-queue
-    rate:           3/m
+    rate:           30/m
     bucket_size:    100
