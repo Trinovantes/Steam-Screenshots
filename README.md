@@ -11,3 +11,9 @@ Uploading to Server
 ```
 {Path to Google App Engine}/appcfg.py --oauth2 update .
 ```
+
+Running Local Tests
+---
+```
+python test.py ~/bin/google_appengine/ tests/
+```

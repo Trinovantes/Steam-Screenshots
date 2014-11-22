@@ -21,6 +21,3 @@ class TriggerTestCase(unittest.TestCase):
         })
         self.assertEqual(response.status_int, 200)
         self.assertEqual(response.content_type, 'application/json')
-
-if __name__ == '__main__':
-    unittest.main()
