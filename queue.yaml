@@ -1,9 +1,9 @@
 queue:
 
 -   name:           listing-queue
-    rate:           10/m
+    rate:           6/m
     bucket_size:    100
 
 -   name:           screenshot-queue
-    rate:           1/s
+    rate:           3/m
     bucket_size:    100

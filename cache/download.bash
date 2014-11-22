@@ -9,7 +9,7 @@ httrack "http://steamcommunity.com/id/trinovantes/screenshots" \
     --depth=3 \
     --verbose \
     --extra-log \
-    -F "Mozilla/5.0 (Linux; Android 4.2; Nexus 4 Build/JVP15Q) Chrome/18.0.1025.166 Mobile Safari/535.19" \
+    -F "Mozilla/5.0 (Linux; Android 4.4.4; Steam Screenshots Bot) Mobile Safari" \
     +http://steamcommunity.com/id/trinovantes/screenshots* \
     +http://steamcommunity.com/sharedfiles/filedetails/?id=*
 

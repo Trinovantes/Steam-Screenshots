@@ -118,15 +118,16 @@ class ScreenshotTriggerHandler(JSONRequestHandler):
         IFTTT_TRIGGER_FIELD_SHOW_NSFW_KEY not in triggerFields:
             raise InvalidTriggerFieldsException()
 
-        # Create user if it doesn't already exist
         username      = triggerFields[IFTTT_TRIGGER_FIELD_USERNAME_KEY]
         show_spoilers = ('yes' == triggerFields[IFTTT_TRIGGER_FIELD_SHOW_SPOILERS_KEY])
         show_nsfw     = ('yes' == triggerFields[IFTTT_TRIGGER_FIELD_SHOW_NSFW_KEY])
+
+        # Create user if it doesn't already exist
         self.user = User.all().filter('steam_username =', username).get()
         if self.user is None:
             if is_valid_username(username):
                 self.user = User(
-                    steam_username      = self.user.steam_username,
+                    steam_username      = username,
                     steam_show_spoilers = show_spoilers,
                     steam_show_nsfw     = show_nsfw
                 )
