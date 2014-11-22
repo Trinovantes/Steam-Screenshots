@@ -4,6 +4,7 @@ import logging
 import json
 import urlparse
 import time
+import re
 from datetime import timedelta
 from datetime import datetime
 from google.appengine.ext import db
@@ -140,6 +141,9 @@ class ScreenshotScraper:
         screenshot_is_spoiler = "spoiler" in screenshot_desc.lower()
         screenshot_is_nsfw    = "nsfw" in screenshot_desc.lower()
         screenshot_game       = page_soup.find(id='gameName').find('a', class_='itemLink').string.strip()
+
+        # Remove non-ASCII characters (e.g. superscript TM)
+        re.sub(r'[^\x00-\x7F]+', '', screenshot_game)
 
         s = Screenshot(
             parent        = self.user,
