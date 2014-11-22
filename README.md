@@ -1,18 +1,20 @@
 Running Locally
----
+===
+
+Assuming the Google App Engine SDK is installed into `~/bin/google_appengine/`
 
 ```
-{Path to Google App Engine}/dev_appserver.py --log_level debug .
+~/bin/google_appengine/dev_appserver.py --log_level debug .
 ```
 
 Uploading to Server
 ---
 
 ```
-{Path to Google App Engine}/appcfg.py --oauth2 update .
+~/bin/google_appengine/appcfg.py --oauth2 update .
 ```
 
-Running Local Tests
+Running Unit Tests
 ---
 ```
 python test.py ~/bin/google_appengine/ tests/
