@@ -110,6 +110,7 @@ class ScreenshotScraper:
         parsed_url = urlparse.urlparse(screenshot_page_url)
         screenshot_id = urlparse.parse_qs(parsed_url.query)['id'][0]
         if Screenshot.all().filter('screenshot_id =', screenshot_id).get() is not None:
+            logging.debug('Screenshot already exists in database: ' + screenshot_id)
             return
 
         # Then check if we got 200 from Steam
